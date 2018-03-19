@@ -1,0 +1,49 @@
+Team Name- bruteforce
+Members
+Deepak Bhati
+Nilesh Vasita
+Subham Goyal
+
+Riddles
+
+Commands for solving the riddles are in the following order. go -> dive -> dive -> back -> pull -> back -> back -> go -> wave ->back -> thrnxxtzy -> read -> gpy mbrua ur -> c -> read -> password . After this we get 32 characters long ciphertext encrypted by DES-reduced to n rounds, where n = 4 or 6 or 8.
+
+Cryptanalysis
+
+It was given in the passege that two characters denote one byte of data, so 16 characters are required for one ciphertext block.
+That means plaintext only contains 16 different letters, and after observing the ciphertext carefully, we can see that it only contains letters from 'f' to 'u'(16 characters). So, our plaintext also contains charactes from 'f' to 'u'. 
+The last passege suggested that we should start with 6 round DES. We did Differential attack to break DES-reduced to 6 rounds.
+We used two three round characteristics with probabilties 1/16, having plaintext xor equals,
+1. 40 08 00 00 04 00 00 00x (in hexadecimal format)
+2. 00 20 00 08 00 00 04 00x
+First part of differential attack is to find partial subkey bits of the sixth round of DES. For that, we have to come up with a counting scheme which has a high signal to noise ratio, so that when we choose m plaintext ciphertext pairs(we used script.py to generate plaintext ciphertext pairs for both the characteristics), whose plaintext xor is equals to plantext xor of the characteristic, we get enough right pairs for our characteristic and get our partial subkey k6 with a very high probability. We choose a separate counting procedure for the subkey bits entering each S-box(In theory, we should take 2^30 counters, beacause they has a better signal to noise ratio but, it is very inefficient), and it gives the correct solution. After running Counting_Scheme.py for both the characteristics, we are able to extract 42 key bits of our target subkey k6. Using k_k6.py, we are able to find 42 bits of our 56 bit DES key(using key scheduling algorithm, we are able to find the map between k and k6).
+Results of Counting Scheme:
+
+First Characteristic-
+S-box          S2       S5       S6        S7       S8
+count          126      65       130       69       85
+Partial key    100000   010011   011010    110011   100101
+
+Second Characteristic-
+S-box          S1       S2       S4        S5       S6
+count          63       78       125       87       125
+Partial Key    000111   100000   110110    010011   011010
+
+So, the partial subkey k6 is 000111100000xxxxxx110110010011011010110011100101
+And, the Key56 is x10xx1xx00101x101xx00x10010x1010111x10000111x10x0100x101. ('x' denotes that those bits are unknown)
+
+Now, to find the remaining 14 key bits of our 56 bit DES key, we will execute exhaustive search attack and retrieve the remaining 14 bits. For bruteforce attack we used DES.py.   
+
+For bruteforce attack we chose-
+Plaintext : "ffffffffffffffff"
+Ciphertext : "ghirlfsohhkhisfk"
+Key56 Found: 11001110001010101000011001011010111010000111110101001101 
+
+Now, we will decrypt our two ciphertext blocks.
+Ciphertext - "uufkilnmfmgkirhg" "ufitmnsjfkpuuqoq"
+Corresponding Plaintext - "lgmilnlkmgmflrmh" "mllgifififififif"
+Corresponding Plaintext byte by byte = {97, 115, 104, 101, 113, 112, 108, 114, 118, 97, 48, 48, 48, 48, 48, 48}
+
+Since, every byte is between 97 and 122, it can be ASCII encoding and our plaintext would be english alphabet. And, we skipped 48 as it may be a padding.
+
+So, the answer was found to be "asheqplrva".
